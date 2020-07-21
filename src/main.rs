@@ -4,16 +4,16 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::time;
 
-async fn add(counter: Arc<AtomicU16>, incr: u16) {
+async fn add(counter: &Arc<AtomicU16>, incr: u16) {
     counter.fetch_add(incr, Ordering::SeqCst);
     time::delay_for(Duration::from_millis(1000u64 * incr as u64)).await;
     println!("add {}", incr);
 }
 
 async fn async_main(counter: Arc<AtomicU16>) {
-    let f1 = add(counter.clone(), 1).fuse();
-    let f2 = add(counter.clone(), 3).fuse();
-    let f3 = add(counter.clone(), 2).fuse();
+    let f1 = add(&counter, 1).fuse();
+    let f2 = add(&counter, 3).fuse();
+    let f3 = add(&counter, 2).fuse();
     // join!(f1, f2, f3);
     pin_mut!(f1, f2, f3);
     select! {
