@@ -1,4 +1,4 @@
-use futures::{future::FutureExt, pin_mut, select};
+use futures::{future::FutureExt, join, pin_mut, select};
 use std::sync::atomic::{AtomicU16, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
@@ -14,19 +14,18 @@ async fn async_main(counter: Arc<AtomicU16>) {
     let f1 = add(&counter, 1).fuse();
     let f2 = add(&counter, 3).fuse();
     let f3 = add(&counter, 2).fuse();
-    // join!(f1, f2, f3);
-    pin_mut!(f1, f2, f3);
-    select! {
-        () = f1 => println!("f1"),
-        () = f2 => println!("f2"),
-        () = f3 => println!("f3"),
-    }
+    join!(f1, f2, f3);
+    // pin_mut!(f1, f2, f3);
+    // select! {
+    //     () = f1 => println!("f1"),
+    //     () = f2 => println!("f2"),
+    //     () = f3 => println!("f3"),
+    // }
 }
 
 #[tokio::main]
 async fn main() {
-    let counter = AtomicU16::new(1);
-    let ar = Arc::new(counter);
+    let ar = Arc::new(AtomicU16::new(0));
     async_main(ar.clone()).await;
     println!("value {}", ar.load(Ordering::SeqCst));
 }
